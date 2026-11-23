@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0a1510">
+    <title>Atelier — Hand Drawing Studio</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%230e1e17%22/><text x=%2250%22 y=%2268%22 text-anchor=%22middle%22 font-family=%22Georgia%22 font-size=%2250%22 fill=%22%23c2a46a%22>H</text></svg>">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand__mark" aria-hidden="true">HD</div>
+                <div class="brand__copy">
+                    <div class="brand__eyebrow">Atelier No. 01 · Gesture Studio</div>
+                    <h1>Hand Drawing <span>Studio</span></h1>
+                    <p>Paint in mid-air. Every instrument answers to the hand.</p>
+                </div>
+            </div>
+
+            <div class="topbar__status">
+                <div class="status-pill" id="statusPill" data-state="loading">
+                    <span class="status-dot" aria-hidden="true"></span>
+                    <span id="status">INITIALISING CAMERA…</span>
+                </div>
+                <div class="fps" id="fps" title="Hand tracking frame rate">-- FPS</div>
+            </div>
+        </header>
+
+        <main class="layout">
+            <section class="workspace" aria-label="Drawing workspace">
+                <div class="stage" id="stage">
+                    <video id="video" autoplay playsinline muted></video>
+                    <canvas id="canvas" width="900" height="600" aria-label="Drawing canvas"></canvas>
+                    <div class="cursor" id="cursor" aria-hidden="true"></div>
+
+                    <div class="stage-hud" id="stageHud" aria-hidden="true">
+                        <span class="stage-hud__gesture" id="hudGesture">—</span>
+                        <span class="stage-hud__divider"></span>
+                        <span id="hudBrush">8 PX</span>
+                    </div>
+
+                    <div class="stage-shade" id="stageShade">
+                        <div class="stage-shade__icon" aria-hidden="true">◈</div>
+                        <strong id="shadeTitle">INITIALISING CAMERA…</strong>
+                        <p id="shadeText">ALLOW CAMERA ACCESS WHEN YOUR BROWSER PROMPTS.</p>
+                    </div>
+
+                    <div class="stage-badge" aria-hidden="true">MIRRORED VIEW</div>
+                </div>
+
+                <p class="toolbar-note">The instruments below are optional — the hand remains the only control.</p>
+
+                <div class="toolbar">
+                    <div class="toolbar__group">
+                        <span class="toolbar__label">Colour</span>
+                        <div class="swatches" id="swatches" role="group" aria-label="Brush colour">
+                            <button class="swatch is-active" type="button" data-color="purple" style="--swatch:#b96bff" aria-label="Purple" aria-pressed="true" title="Purple — fist"></button>
+                            <button class="swatch" type="button" data-color="cyan" style="--swatch:#38e8ff" aria-label="Cyan" aria-pressed="false" title="Cyan — peace"></button>
+                            <button class="swatch" type="button" data-color="coral" style="--swatch:#ff5f7e" aria-label="Coral" aria-pressed="false" title="Coral — thumbs up"></button>
+                            <button class="swatch" type="button" data-color="pink" style="--swatch:#ff7ad9" aria-label="Pink" aria-pressed="false" title="Pink — three fingers"></button>
+                            <button class="swatch" type="button" data-color="lime" style="--swatch:#9dff6b" aria-label="Lime" aria-pressed="false" title="Lime — four fingers"></button>
+                            <button class="swatch" type="button" data-color="gold" style="--swatch:#ffd166" aria-label="Gold" aria-pressed="false" title="Gold — thumb and pinky"></button>
+                        </div>
+                    </div>
+
+                    <div class="toolbar__divider" aria-hidden="true"></div>
+
+                    <div class="toolbar__group">
+                        <label class="toolbar__label" for="brushSize">Brush <output id="brushValue">8</output> PX</label>
+                        <input id="brushSize" type="range" min="2" max="24" value="8">
+                    </div>
+
+                    <div class="toolbar__divider" aria-hidden="true"></div>
+
+                    <div class="toolbar__group toolbar__group--actions">
+                        <button class="btn" type="button" id="undoBtn" title="Undo last stroke">
+                            <span aria-hidden="true">↶</span> Undo
+                        </button>
+                        <button class="btn" type="button" id="clearBtn" title="Clear the canvas">
+                            <span aria-hidden="true">⌫</span> Clear
+                        </button>
+                        <button class="btn btn--primary" type="button" id="saveBtn" title="Download your drawing as PNG">
+                            <span aria-hidden="true">↓</span> Save
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <aside class="sidebar" aria-label="Hand control and guides">
+                <section class="card card--control">
+                    <div class="card__head">
+                        <h2>Hand Control</h2>
+                        <span class="card__badge card__badge--live">Live</span>
+                    </div>
+                    <div class="readouts">
+                        <div class="readout">
+                            <span class="readout__label">Gesture</span>
+                            <strong id="readoutGesture">—</strong>
+                        </div>
+                        <div class="readout">
+                            <span class="readout__label">Colour</span>
+                            <strong class="readout__color" id="readoutColor"><i></i><span id="readoutColorName">Purple</span></strong>
+                        </div>
+                        <div class="readout">
+                            <span class="readout__label">Brush</span>
+                            <strong id="readoutBrush">8 PX</strong>
+                        </div>
+                    </div>
+                    <div class="action-log" id="actionLog" aria-live="polite">
+                        <div class="action-log__item">AWAITING GESTURE…</div>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <div class="card__head">
+                        <h2>The Gestures</h2>
+                        <span class="card__badge">Ten moves</span>
+                    </div>
+                    <ul class="gestures">
+                        <li><span class="gestures__index">01</span><div><strong>Pinch</strong><p>Draw · pinch harder for a broader stroke</p></div></li>
+                        <li><span class="gestures__index">02</span><div><strong>Fist</strong><p>Purple</p></div></li>
+                        <li><span class="gestures__index">03</span><div><strong>Peace · index and middle</strong><p>Cyan</p></div></li>
+                        <li><span class="gestures__index">04</span><div><strong>Thumbs up</strong><p>Coral</p></div></li>
+                        <li><span class="gestures__index">05</span><div><strong>Three fingers</strong><p>Pink</p></div></li>
+                        <li><span class="gestures__index">06</span><div><strong>Four fingers · thumb in</strong><p>Lime</p></div></li>
+                        <li><span class="gestures__index">07</span><div><strong>Thumb and pinky</strong><p>Gold</p></div></li>
+                        <li><span class="gestures__index">08</span><div><strong>Pinky only</strong><p>Undo the last stroke</p></div></li>
+                        <li><span class="gestures__index">09</span><div><strong>Ring and pinky</strong><p>Save as PNG</p></div></li>
+                        <li><span class="gestures__index">10</span><div><strong>Open hand</strong><p>Clear the canvas</p></div></li>
+                    </ul>
+                </section>
+
+                <section class="card card--tip">
+                    <h2>The Method</h2>
+                    <p>Keep your hand forty to eighty centimetres from the lens in even light. Hold a gesture briefly — a passing shape will not activate it.</p>
+                    <p class="card__note">Should the camera be unavailable, the mouse remains at your disposal.</p>
+                </section>
+            </aside>
+        </main>
+
+        <footer class="footer">
+            <span>Mediapipe Hands · Gesture Instrument</span>
+            <span>No keyboard required</span>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
